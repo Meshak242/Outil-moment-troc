@@ -1,0 +1,1166 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Moment Troc Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:ital,wght@0,400;0,600;0,700;1,400;1,600&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --ink:#1C1208;--ink2:#2E2416;--ink3:#5C4A32;--ink4:#9A856A;--ink5:#C4B49E;
+  --cream:#F7F3EE;--cream2:#EDE8E0;--cream3:#E2DAD0;
+  --gold:#B8922A;--gold2:#D4A843;--gold3:#F0C96A;--gold-dim:rgba(184,146,42,0.1);--gold-glow:rgba(212,168,67,0.15);
+  --warm:#FAF7F3;--border:rgba(180,155,110,0.2);--border2:rgba(180,155,110,0.4);
+  --green:#2D6A4F;--green-l:rgba(45,106,79,0.08);
+  --red:#9B2C2C;--red-l:rgba(155,44,44,0.08);
+  --blue:#2C5282;--blue-l:rgba(44,82,130,0.08);
+  --radius:20px;--radius-sm:12px;--radius-xs:8px;
+  --shadow:0 4px 24px rgba(28,18,8,0.07);--shadow-lg:0 12px 48px rgba(28,18,8,0.12);
+  --transition:.22s cubic-bezier(.4,0,.2,1);
+}
+
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--cream);
+  color:var(--ink);
+  min-height:100vh;
+  padding:0;
+}
+
+/* ── NOISE TEXTURE ── */
+body::before{
+  content:'';position:fixed;inset:0;
+  background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.025'/%3E%3C/svg%3E");
+  pointer-events:none;z-index:0;opacity:.4;
+}
+
+/* ── HEADER ── */
+.hdr{
+  background:var(--ink);
+  padding:20px 32px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:100;
+  border-bottom:1px solid rgba(255,255,255,0.06);
+}
+.hbrand{display:flex;align-items:center;gap:12px;}
+.hlogo{
+  width:38px;height:38px;border-radius:50%;
+  background:var(--gold-dim);border:1.5px solid var(--gold2);
+  display:flex;align-items:center;justify-content:center;
+  font-family:'Lora',serif;font-size:13px;font-weight:700;color:var(--gold2);
+}
+.hname{font-family:'Lora',serif;font-size:16px;color:#F5EFE7;font-weight:600;}
+.htag{font-size:11px;color:rgba(255,255,255,0.35);letter-spacing:.12em;text-transform:uppercase;margin-top:1px;}
+.hquote{font-family:'Lora',serif;font-size:11px;font-style:italic;color:rgba(255,255,255,0.25);}
+
+/* ── WRAP ── */
+.wrap{max-width:780px;margin:0 auto;padding:40px 20px 120px;position:relative;z-index:1;}
+
+/* ── MODE SWITCHER ── */
+.mode-switch{
+  display:grid;grid-template-columns:1fr 1fr;gap:0;
+  background:var(--ink);border-radius:16px;padding:5px;
+  margin-bottom:36px;
+  box-shadow:var(--shadow-lg);
+}
+.msw{
+  padding:14px 20px;border-radius:11px;border:none;
+  font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;
+  cursor:pointer;transition:var(--transition);
+  color:rgba(255,255,255,0.35);background:transparent;
+  display:flex;align-items:center;gap:8px;justify-content:center;
+}
+.msw.on{background:var(--gold2);color:var(--ink);}
+.msw-ico{font-size:16px;}
+
+/* ── PANEL ── */
+.panel{display:none;}
+.panel.on{display:block;}
+
+/* ── SECTION ── */
+.sec{
+  background:var(--warm);border:1px solid var(--border);
+  border-radius:var(--radius);margin-bottom:16px;
+  overflow:hidden;box-shadow:var(--shadow);
+  transition:var(--transition);
+}
+.sec.locked{opacity:.35;pointer-events:none;}
+.sec.done{border-color:rgba(184,146,42,0.3);}
+.sec-head{
+  padding:18px 24px;display:flex;align-items:center;gap:14px;
+  cursor:pointer;user-select:none;
+}
+.sec.collapsed .sec-body{display:none;}
+.snum{
+  width:28px;height:28px;border-radius:50%;flex-shrink:0;
+  background:var(--gold-dim);border:1.5px solid rgba(184,146,42,0.35);
+  display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;color:var(--gold);transition:var(--transition);
+}
+.sec.done .snum{background:var(--gold2);border-color:var(--gold2);color:var(--ink);}
+.sec.done .snum-n{display:none;}
+.sec.done .snum::after{content:'✓';font-size:12px;font-weight:700;}
+.sh-info{flex:1;}
+.sh-title{font-size:14px;font-weight:600;color:var(--ink);}
+.sh-sub{font-size:11px;color:var(--ink4);margin-top:2px;}
+.sh-sum{font-size:12px;color:var(--gold);font-weight:600;display:none;margin-top:2px;}
+.sec.done .sh-sum{display:block;}
+.sec-body{padding:0 24px 24px;border-top:1px solid var(--border);}
+
+/* ── FIELDS ── */
+.fg{margin-top:18px;}
+.fl{display:block;font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink4);margin-bottom:8px;}
+.fi,.fta{
+  width:100%;background:var(--cream);border:1.5px solid var(--border);
+  border-radius:var(--radius-sm);padding:12px 14px;
+  font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink);
+  outline:none;transition:var(--transition);resize:none;
+}
+.fi:focus,.fta:focus{border-color:var(--gold2);background:white;box-shadow:0 0 0 3px var(--gold-glow);}
+.fi::placeholder,.fta::placeholder{color:var(--ink5);}
+.fh{font-size:11px;color:var(--ink4);margin-top:6px;line-height:1.55;}
+
+/* ── TAGS ── */
+.tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.tag{
+  padding:6px 14px;border-radius:100px;
+  border:1.5px solid var(--border);background:transparent;
+  font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;
+  color:var(--ink3);cursor:pointer;transition:var(--transition);
+}
+.tag:hover{border-color:var(--border2);color:var(--ink);}
+.tag.on{border-color:var(--gold2);background:var(--gold-dim);color:var(--ink);font-weight:600;}
+
+/* ── PROFIL CARD ── */
+.profil-card{
+  margin-top:16px;padding:16px 18px;border-radius:var(--radius-sm);
+  background:var(--gold-dim);border:1px solid rgba(184,146,42,0.25);
+  display:none;
+}
+.profil-card.on{display:block;}
+.pc-label{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);margin-bottom:6px;}
+.pc-name{font-size:15px;font-weight:700;color:var(--ink);margin-bottom:4px;}
+.pc-desc{font-size:12px;color:var(--ink3);line-height:1.6;}
+.pc-tags{display:flex;flex-wrap:wrap;gap:5px;margin-top:10px;}
+.pc-tag{padding:3px 10px;border-radius:100px;font-size:11px;font-weight:500;background:rgba(184,146,42,0.12);color:var(--gold);border:1px solid rgba(184,146,42,0.2);}
+
+/* ── ANGLES GRID ── */
+.angles-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:16px;}
+@media(max-width:600px){.angles-grid{grid-template-columns:1fr;}}
+.angle-card{
+  padding:14px 16px;border-radius:var(--radius-sm);
+  border:1.5px solid var(--border);background:var(--cream);
+  cursor:pointer;transition:var(--transition);
+}
+.angle-card:hover{border-color:var(--border2);background:var(--cream2);}
+.angle-card.on{border-color:var(--gold2);background:var(--gold-dim);}
+.ac-letter{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink4);margin-bottom:6px;}
+.ac-title{font-size:13px;font-weight:600;color:var(--ink);margin-bottom:4px;line-height:1.35;}
+.ac-sub{font-size:11px;color:var(--ink4);line-height:1.45;}
+
+/* ── SUB-ANGLES ── */
+.sub-angles{margin-top:12px;display:none;}
+.sub-angles.on{display:block;}
+.sa-label{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink4);margin-bottom:8px;}
+.sub-angle-btn{
+  display:block;width:100%;text-align:left;
+  padding:10px 14px;border-radius:var(--radius-xs);
+  border:1.5px solid var(--border);background:var(--cream);
+  font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;
+  color:var(--ink3);cursor:pointer;margin-bottom:6px;
+  transition:var(--transition);
+}
+.sub-angle-btn:hover{border-color:var(--border2);color:var(--ink);}
+.sub-angle-btn.on{border-color:var(--gold2);background:var(--gold-dim);color:var(--ink);font-weight:600;}
+
+/* ── HOOKS ── */
+.hooks-list{margin-top:16px;display:flex;flex-direction:column;gap:8px;}
+.hook-item{
+  padding:14px 16px;border-radius:var(--radius-sm);
+  border:1.5px solid var(--border);background:var(--cream);
+  cursor:pointer;transition:var(--transition);
+}
+.hook-item:hover{border-color:var(--border2);background:var(--cream2);}
+.hook-item.on{border-color:var(--gold2);background:var(--gold-dim);}
+.hi-code{font-size:10px;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:var(--gold);margin-bottom:5px;}
+.hi-formula{font-family:'Lora',serif;font-size:13px;font-style:italic;color:var(--ink2);line-height:1.5;margin-bottom:4px;}
+.hi-why{font-size:11px;color:var(--ink4);line-height:1.45;}
+
+/* ── FORMATS ── */
+.formats-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px;}
+@media(max-width:500px){.formats-grid{grid-template-columns:1fr 1fr;}}
+.fmt-btn{
+  padding:14px 12px;border-radius:var(--radius-sm);text-align:center;
+  border:1.5px solid var(--border);background:var(--cream);
+  cursor:pointer;transition:var(--transition);
+}
+.fmt-btn:hover{border-color:var(--border2);background:var(--cream2);}
+.fmt-btn.on{border-color:var(--gold2);background:var(--gold-dim);}
+.fmt-btn.recommended::after{content:'★';display:block;font-size:10px;color:var(--gold2);margin-top:4px;}
+.fb-ico{font-size:20px;margin-bottom:6px;}
+.fb-name{font-size:12px;font-weight:600;color:var(--ink);margin-bottom:2px;}
+.fb-lines{font-size:10px;color:var(--ink4);}
+
+/* ── FORMAT RECOMMENDED NOTE ── */
+.fmt-note{
+  margin-top:12px;padding:11px 14px;border-radius:var(--radius-xs);
+  background:var(--gold-dim);border:1px solid rgba(184,146,42,0.25);
+  font-size:12px;color:var(--ink3);line-height:1.6;display:none;
+}
+.fmt-note.on{display:block;}
+
+/* ── PROMPT BOX ── */
+.prompt-wrap{margin-top:16px;}
+.prompt-box{
+  background:var(--ink);border-radius:16px;overflow:hidden;
+  box-shadow:var(--shadow-lg);
+}
+.pb-head{
+  padding:12px 16px;border-bottom:1px solid rgba(255,255,255,0.07);
+  display:flex;justify-content:space-between;align-items:center;
+}
+.pb-label{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(255,255,255,0.3);}
+.pb-copy{
+  padding:6px 14px;border-radius:var(--radius-xs);
+  border:1px solid rgba(184,146,42,0.3);background:var(--gold-dim);
+  font-family:'DM Sans',sans-serif;font-size:11px;font-weight:600;color:var(--gold2);
+  cursor:pointer;transition:var(--transition);
+}
+.pb-copy:hover{background:rgba(184,146,42,0.2);}
+.pb-copy.ok{color:#68D391;border-color:rgba(104,211,145,.3);background:rgba(104,211,145,.06);}
+.pb-text{
+  display:block;width:100%;padding:16px;
+  font-family:'DM Sans',sans-serif;font-size:12px;
+  color:rgba(255,255,255,0.65);line-height:1.85;
+  background:transparent;border:none;outline:none;resize:none;
+  min-height:300px;cursor:text;-webkit-user-select:all;user-select:all;
+}
+.pb-hint{padding:0 16px 12px;font-size:10px;color:rgba(255,255,255,0.18);font-style:italic;}
+
+/* ── INSPIRATION ZONE ── */
+.inspi-detect{
+  margin-top:16px;padding:16px 18px;border-radius:var(--radius-sm);
+  background:var(--cream2);border:1px solid var(--border);
+  display:none;
+}
+.inspi-detect.on{display:block;}
+.id-label{font-size:10px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:var(--ink4);margin-bottom:10px;}
+.id-row{display:flex;gap:8px;margin-bottom:7px;align-items:flex-start;}
+.id-key{font-size:11px;font-weight:600;color:var(--ink3);min-width:90px;padding-top:1px;}
+.id-val{font-size:12px;color:var(--ink);line-height:1.5;flex:1;}
+.id-badge{display:inline-block;padding:2px 9px;border-radius:100px;font-size:11px;font-weight:600;background:var(--gold-dim);color:var(--gold);border:1px solid rgba(184,146,42,0.25);margin-right:4px;margin-bottom:4px;}
+
+/* ── BTN PRINCIPAL ── */
+.btn-main{
+  width:100%;background:var(--ink);color:white;
+  border:none;border-radius:var(--radius-sm);
+  padding:14px;font-family:'DM Sans',sans-serif;
+  font-size:14px;font-weight:600;cursor:pointer;
+  transition:var(--transition);margin-top:16px;
+  display:flex;align-items:center;justify-content:center;gap:8px;
+}
+.btn-main:hover{background:var(--ink2);transform:translateY(-1px);box-shadow:0 8px 24px rgba(28,18,8,0.15);}
+.btn-main:disabled{opacity:.3;pointer-events:none;}
+.btn-main.gold{background:linear-gradient(135deg,var(--gold),var(--gold2));color:var(--ink);}
+.btn-main.gold:hover{filter:brightness(1.05);}
+
+/* ── FOOTER ── */
+.footer{text-align:center;margin-top:60px;padding-top:24px;border-top:1px solid var(--border);}
+.fq{font-family:'Lora',serif;font-size:14px;font-style:italic;color:var(--ink3);margin-bottom:5px;}
+.fa{font-size:10px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--gold);}
+
+@media(max-width:600px){
+  .hdr{padding:16px 20px;}
+  .hquote{display:none;}
+  .wrap{padding:24px 14px 80px;}
+  .sec-body{padding:0 16px 20px;}
+  .sec-head{padding:16px 20px;}
+}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hbrand">
+    <div class="hlogo">MT</div>
+    <div>
+      <div class="hname">Moment Troc</div>
+      <div class="htag">Studio · Contenu</div>
+    </div>
+  </div>
+  <div class="hquote">"Vendre c'est pas convaincre. C'est reconnaître."</div>
+</header>
+
+<div class="wrap">
+
+  <!-- MODE SWITCHER -->
+  <div class="mode-switch">
+    <button class="msw on" id="msw-a" onclick="switchMode('a')">
+      <span class="msw-ico">✦</span> Je n'ai pas d'idée — guide-moi
+    </button>
+    <button class="msw" id="msw-b" onclick="switchMode('b')">
+      <span class="msw-ico">✎</span> J'ai une idée — structure-la
+    </button>
+  </div>
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- PANEL A — PAS D'IDÉE -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="panel on" id="panel-a">
+
+    <!-- S1 — PRODUIT -->
+    <div class="sec" id="a1">
+      <div class="sec-head" onclick="tog('a1')">
+        <div class="snum"><span class="snum-n">1</span></div>
+        <div class="sh-info">
+          <div class="sh-title">Ton produit / business</div>
+          <div class="sh-sub">Décris ce que tu vends et pour qui</div>
+          <div class="sh-sum" id="a1s"></div>
+        </div>
+      </div>
+      <div class="sec-body">
+        <div class="fg">
+          <label class="fl">Produit ou service</label>
+          <input class="fi" id="a-produit" type="text" placeholder="Ex : Formation pour coiffeurs à domicile qui veulent trouver des clients réguliers" oninput="analyzeA()"/>
+        </div>
+        <div class="fg">
+          <label class="fl">Le problème que tu résous — concret</label>
+          <textarea class="fta" id="a-probleme" rows="3" placeholder="Ex : Ils postent des photos de coiffures mais personne ne les contacte. Ils ne savent pas comment transformer leur audience en clients." oninput="analyzeA()"></textarea>
+        </div>
+        <div class="fg">
+          <label class="fl">Ton ton naturel</label>
+          <div class="tags" id="ton-tags">
+            <button class="tag" onclick="selTon('Direct et sans filtre',this)">Direct</button>
+            <button class="tag" onclick="selTon('Chaleureux et bienveillant',this)">Chaleureux</button>
+            <button class="tag" onclick="selTon('Analytique et précis',this)">Analytique</button>
+            <button class="tag" onclick="selTon('Storyteller',this)">Storyteller</button>
+            <button class="tag" onclick="selTon('Provocateur et cash',this)">Provocateur</button>
+          </div>
+        </div>
+        <div class="profil-card" id="profil-card">
+          <div class="pc-label">Profil détecté</div>
+          <div class="pc-name" id="pc-name">—</div>
+          <div class="pc-desc" id="pc-desc">—</div>
+          <div class="pc-tags" id="pc-tags"></div>
+        </div>
+        <button class="btn-main" id="a1-btn" onclick="valA1()" disabled>Voir mes angles →</button>
+      </div>
+    </div>
+
+    <!-- S2 — ANGLES -->
+    <div class="sec locked" id="a2">
+      <div class="sec-head" onclick="tog('a2')">
+        <div class="snum"><span class="snum-n">2</span></div>
+        <div class="sh-info">
+          <div class="sh-title">Angles de contenu</div>
+          <div class="sh-sub">L'outil génère des angles spécifiques à ton produit</div>
+          <div class="sh-sum" id="a2s"></div>
+        </div>
+      </div>
+      <div class="sec-body">
+        <div class="angles-grid" id="angles-grid"></div>
+        <div class="sub-angles" id="sub-angles">
+          <div class="sa-label" style="margin-top:16px">Sous-angles disponibles</div>
+          <div id="sub-angles-list"></div>
+        </div>
+        <button class="btn-main" id="a2-btn" onclick="valA2()" disabled>Choisir mes hooks →</button>
+      </div>
+    </div>
+
+    <!-- S3 — HOOKS -->
+    <div class="sec locked" id="a3">
+      <div class="sec-head" onclick="tog('a3')">
+        <div class="snum"><span class="snum-n">3</span></div>
+        <div class="sh-info">
+          <div class="sh-title">Structure de hook</div>
+          <div class="sh-sub">Choisis la mécanique de ta première ligne</div>
+          <div class="sh-sum" id="a3s"></div>
+        </div>
+      </div>
+      <div class="sec-body">
+        <div class="hooks-list" id="hooks-list"></div>
+        <button class="btn-main" id="a3-btn" onclick="valA3()" disabled>Choisir mon format →</button>
+      </div>
+    </div>
+
+    <!-- S4 — FORMAT -->
+    <div class="sec locked" id="a4">
+      <div class="sec-head" onclick="tog('a4')">
+        <div class="snum"><span class="snum-n">4</span></div>
+        <div class="sh-info">
+          <div class="sh-title">Format du post</div>
+          <div class="sh-sub">La longueur que ton sujet appelle</div>
+          <div class="sh-sum" id="a4s"></div>
+        </div>
+      </div>
+      <div class="sec-body">
+        <div class="formats-grid" id="formats-grid-a"></div>
+        <div class="fmt-note" id="fmt-note-a"></div>
+        <button class="btn-main gold" id="a4-btn" onclick="buildPromptA()" disabled>✦ Générer mon prompt</button>
+      </div>
+    </div>
+
+    <!-- S5 — PROMPT -->
+    <div class="sec locked" id="a5">
+      <div class="sec-head" onclick="tog('a5')">
+        <div class="snum"><span class="snum-n">5</span></div>
+        <div class="sh-info">
+          <div class="sh-title">Ton prompt · Prêt à copier</div>
+          <div class="sh-sub">Colle dans Claude ou ChatGPT</div>
+          <div class="sh-sum" id="a5s"></div>
+        </div>
+      </div>
+      <div class="sec-body">
+        <div class="prompt-wrap">
+          <div class="prompt-box">
+            <div class="pb-head">
+              <div class="pb-label">Prompt · Mode A</div>
+              <button class="pb-copy" id="pa-copy" onclick="copyPrompt('pa-text','pa-copy')">Copier</button>
+            </div>
+            <textarea class="pb-text" id="pa-text" readonly onclick="this.select()" ontouchstart="this.select()"></textarea>
+            <div class="pb-hint">👆 Touche pour sélectionner · Colle dans ton IA</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /panel-a -->
+
+
+  <!-- ══════════════════════════════════════════ -->
+  <!-- PANEL B — J'AI UNE IDÉE -->
+  <!-- ══════════════════════════════════════════ -->
+  <div class="panel" id="panel-b">
+
+    <!-- B1 — INSPIRATION -->
+    <div class="sec" id="b1">
+      <div class="sec-head" onclick="tog('b1')">
+        <div class="snum"><span class="snum-n">1</span></div>
+        <div class="sh-info">
+          <div class="sh-title">Ton idée brute</div>
+          <div class="sh-sub">Écris ce que tu as en tête — même en désordre</div>
+          <div class="sh-sum" id="b1s"></div>
+        </div>
+      </div>
+      <div class="sec-body">
+        <div class="fg">
+          <label class="fl">Ton idée, ton observation, ta frustration — tout</label>
+          <textarea class="fta" id="b-inspi" rows="6"
+            placeholder="Écris ce qui te passe par la tête. Ce que tu veux dire. L'observation que tu as faite. La frustration que tu ressens. Un exemple que tu veux raconter. Même en désordre.
+
+L'outil va détecter le profil, l'angle, le format adapté et te construire un prompt précis."
+            oninput="analyzeB()"></textarea>
+          <div class="fh">Plus tu donnes de détails — plus le prompt sera précis.</div>
+        </div>
+        <div class="fg">
+          <label class="fl">Ton produit / ce que tu vends (optionnel mais recommandé)</label>
+          <input class="fi" id="b-produit" type="text" placeholder="Ex : Coaching en ligne pour entrepreneurs débutants" oninput="analyzeB()"/>
+        </div>
+        <div class="fg">
+          <label class="fl">Ton ton naturel</label>
+          <div class="tags" id="ton-tags-b">
+            <button class="tag" onclick="selTonB('Direct et sans filtre',this)">Direct</button>
+            <button class="tag" onclick="selTonB('Chaleureux et bienveillant',this)">Chaleureux</button>
+            <button class="tag" onclick="selTonB('Analytique et précis',this)">Analytique</button>
+            <button class="tag" onclick="selTonB('Storyteller',this)">Storyteller</button>
+            <button class="tag" onclick="selTonB('Provocateur et cash',this)">Provocateur</button>
+          </div>
+        </div>
+
+        <!-- DÉTECTION -->
+        <div class="inspi-detect" id="inspi-detect">
+          <div class="id-label">Analyse détectée</div>
+          <div class="id-row"><div class="id-key">Profil</div><div class="id-val" id="id-profil">—</div></div>
+          <div class="id-row"><div class="id-key">Angle détecté</div><div class="id-val" id="id-angle">—</div></div>
+          <div class="id-row"><div class="id-key">Format conseillé</div><div class="id-val" id="id-format">—</div></div>
+          <div class="id-row"><div class="id-key">Hook recommandé</div><div class="id-val" id="id-hook">—</div></div>
+          <div class="id-row"><div class="id-key">Mots clés repérés</div><div class="id-val" id="id-mots"></div></div>
+        </div>
+
+        <button class="btn-main" id="b1-btn" onclick="valB1()" disabled>Voir la structure proposée →</button>
+      </div>
+    </div>
+
+    <!-- B2 — AJUSTEMENTS -->
+    <div class="sec locked" id="b2">
+      <div class="sec-head" onclick="tog('b2')">
+        <div class="snum"><span class="snum-n">2</span></div>
+        <div class="sh-info">
+          <div class="sh-title">Ajuste si besoin</div>
+          <div class="sh-sub">Change hook ou format selon ce que tu veux</div>
+          <div class="sh-sum" id="b2s"></div>
+        </div>
+      </div>
+      <div class="sec-body">
+        <div class="fg">
+          <label class="fl">Hook — confirme ou change</label>
+          <div class="hooks-list" id="b-hooks-list"></div>
+        </div>
+        <div class="fg" style="margin-top:20px;">
+          <label class="fl">Format — confirme ou change</label>
+          <div class="formats-grid" id="formats-grid-b"></div>
+          <div class="fmt-note" id="fmt-note-b"></div>
+        </div>
+        <button class="btn-main gold" id="b2-btn" onclick="buildPromptB()">✦ Générer mon prompt</button>
+      </div>
+    </div>
+
+    <!-- B3 — PROMPT -->
+    <div class="sec locked" id="b3">
+      <div class="sec-head" onclick="tog('b3')">
+        <div class="snum"><span class="snum-n">3</span></div>
+        <div class="sh-info">
+          <div class="sh-title">Ton prompt · Prêt à copier</div>
+          <div class="sh-sub">Colle dans Claude ou ChatGPT</div>
+          <div class="sh-sum" id="b3s"></div>
+        </div>
+      </div>
+      <div class="sec-body">
+        <div class="prompt-wrap">
+          <div class="prompt-box">
+            <div class="pb-head">
+              <div class="pb-label">Prompt · Mode B</div>
+              <button class="pb-copy" id="pb-copy" onclick="copyPrompt('pb-text','pb-copy')">Copier</button>
+            </div>
+            <textarea class="pb-text" id="pb-text" readonly onclick="this.select()" ontouchstart="this.select()"></textarea>
+            <div class="pb-hint">👆 Touche pour sélectionner · Colle dans ton IA</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div><!-- /panel-b -->
+
+  <div class="footer">
+    <div class="fq">"Vendre c'est pas convaincre. C'est reconnaître."</div>
+    <div class="fa">— Moment Troc</div>
+  </div>
+
+</div><!-- /wrap -->
+
+<script>
+/* ══════════════════════════════════════════════════════
+   DATA
+══════════════════════════════════════════════════════ */
+
+const PROFILS = {
+  auto: {
+    nom:'Automatiseur', emoji:'⚙️',
+    desc:'Cherche un chemin clair. A essayé sans résultat. Veut des étapes concrètes.',
+    mots:['chemin','étape','simple','par où','plan','clarté','méthode','guide','perdu','commencer','pas savoir'],
+    activer:['étapes claires','méthode prouvée','chemin concret','simple'],
+    besoin:'Arrêter d\'avoir honte de ne pas savoir par où commencer.'
+  },
+  optiV: {
+    nom:'Optimiseur Valeur', emoji:'📈',
+    desc:'Raisonne en ROI. Veut des résultats chiffrés. Calcule effort vs résultat.',
+    mots:['roi','résultat','efficace','gain','rentable','chiffre','temps','productif','levier','optimiser'],
+    activer:['ROI','résultats mesurables','avant/après','gain de temps'],
+    besoin:'Prouver que son travail vaut vraiment ce qu\'il pense qu\'il vaut.'
+  },
+  optiP: {
+    nom:'Optimiseur Prix', emoji:'💰',
+    desc:'Compare toujours. A été déçu. Cherche la transparence totale.',
+    mots:['prix','comparer','cher','budget','coût','rapport','économie','meilleur prix','arnaque'],
+    activer:['transparent','honnête','justifié','sans surprise'],
+    besoin:'Ne jamais se sentir naïf ou manipulé encore une fois.'
+  },
+  elev: {
+    nom:'Élévateur', emoji:'👑',
+    desc:'Achète pour son image et son statut. Veut être reconnu à sa juste valeur.',
+    mots:['statut','image','prestige','cercle','influence','reconnu','vip','respect','crédibilité'],
+    activer:['reconnu','référence','les meilleurs','crédibilité'],
+    besoin:'Être enfin reconnu à sa juste valeur par ceux qui comptent.'
+  },
+  lib: {
+    nom:'Libérateur', emoji:'🔓',
+    desc:'Rejette le générique. Veut du sur-mesure. Sa situation est différente.',
+    mots:['unique','personnalisé','sur-mesure','moi','singulier','pas pour tous','différent','adapté'],
+    activer:['sur-mesure','adapté','spécifique','fait pour toi'],
+    besoin:'Trouver enfin quelqu\'un qui le comprend sans le mettre dans une case.'
+  },
+  protec: {
+    nom:'Protecteur', emoji:'🛡️',
+    desc:'Peur de se tromper. Cherche la garantie. Veut être rassuré avant tout.',
+    mots:['garantie','risque','peur','sécurité','remboursé','essai','tromper','sûr','fiable'],
+    activer:['sans risque','garanti','sécurisé','essai gratuit'],
+    besoin:'Ne jamais perdre de l\'argent ou se sentir manipulé.'
+  }
+};
+
+const HOOKS = [
+  { code:'①', name:'Cadrage perte + Ancrage',
+    formula:'Sans [offre], tu perds [chiffre] par [période]. [Total].',
+    why:'Active la peur de la perte. Chiffre concret = réalité impossible à ignorer.',
+    profils:['optiV','protec','auto'] },
+  { code:'②', name:'Affirmation provocante + Rupture',
+    formula:'Arrête de croire que [croyance répandue]. [Conséquence réelle].',
+    why:'Brise une conviction. Le lecteur résiste puis réfléchit. Fort pour déconstruire.',
+    profils:['auto','lib','elev'] },
+  { code:'③', name:'Ancrage chiffré + Question',
+    formula:'[Chiffre] [action répétée inutilement] = [total perdu]. Ça te va ?',
+    why:'Le calcul rend visible ce que le lecteur refuse de voir. La question l\'implique.',
+    profils:['optiV','optiP'] },
+  { code:'④', name:'Contraste + Constat absurde',
+    formula:'Il [action inefficace] pour économiser [petite somme]. Ça lui coûte [grosse somme].',
+    why:'L\'absurdité du contraste force la prise de conscience sans agressivité.',
+    profils:['optiP','auto','protec'] },
+  { code:'⑤', name:'Affirmation + Contraste de résultat',
+    formula:'Tu fais [action X] en [grande quantité]. Lui, [même résultat] en [petite quantité].',
+    why:'La comparaison directe active l\'ego et la curiosité en même temps.',
+    profils:['optiV','elev'] },
+  { code:'⑦', name:'Durée accumulée + Question déclencheuse',
+    formula:'[Durée réelle] à [action répétée inutilement]. Pourquoi tu vas encore [conséquence] ?',
+    why:'La durée rend la perte tangible. La question force l\'auto-évaluation.',
+    profils:['auto','optiV'] },
+  { code:'⑧', name:'Micro-scène vécue + Cadrage perte',
+    formula:'[Moment vécu]. Tu [action futile]. [Résultat nul]. Pendant ce temps, [rival] [gain].',
+    why:'Le moment vécu (jamais une heure précise) crée l\'immersion. Le contraste frappe.',
+    profils:['auto','protec','lib'] },
+  { code:'H1', name:'Perte + Rupture de croyance',
+    formula:'Arrête de croire que [croyance]. Pendant que tu [action inefficace], ton [rival] [gain].',
+    why:'Double attaque : la croyance ET la perte en cours. Tension maximale.',
+    profils:['optiV','auto','elev'] },
+  { code:'H3', name:'Rupture + Ancrage chiffré',
+    formula:'Arrête de croire que [croyance]. [Conséquence chiffrée ou datée].',
+    why:'La rupture ouvre. Le chiffre ferme. Pas de porte de sortie.',
+    profils:['auto','optiP'] },
+  { code:'H4', name:'Double contraste + Résultat inversé',
+    formula:'Tu fais [action X] en [grande quantité]. Lui, [même chose] en [petite quantité]. [Résultat inversé].',
+    why:'Trois temps : toi / lui / l\'écart. La révélation finale est la plus forte.',
+    profils:['optiV','elev'] },
+  { code:'H8', name:'Ancrage + Question directe',
+    formula:'[Chiffre] par [période]. [Total sur un an]. Ça te va ?',
+    why:'Minimaliste. Le chiffre seul suffit. La question courte referme le piège.',
+    profils:['optiV','optiP'] },
+  { code:'H10', name:'Perte + Contraste + Question fermée',
+    formula:'Tu [action inefficace] pour [petit résultat]. Ton [rival] [action efficace] pour [grand résultat]. Tu veux continuer ?',
+    why:'Architecture en 3 temps. La question finale est une décision impossible à éviter.',
+    profils:['optiV','auto','elev'] }
+];
+
+const FORMATS = [
+  { id:'direct', ico:'⚡', name:'Direct', lines:'1-2 lignes', desc:'Vérité tranchante. Rien d\'autre. Le vide fait l\'effet.' },
+  { id:'court', ico:'▪', name:'Court', lines:'4-6 lignes', desc:'Hook + constat + question miroir. Rapide, percutant.' },
+  { id:'moyen', ico:'▪▪', name:'Moyen', lines:'8-14 lignes', desc:'Situation installée + twist + révélation.' },
+  { id:'long', ico:'▪▪▪', name:'Long', lines:'15-26 lignes', desc:'Architecture complète. Croyance à déconstruire.' },
+  { id:'thread', ico:'💬', name:'Thread', lines:'Post + 3 commentaires', desc:'Hook pur + développement en commentaires.' },
+  { id:'rythme', ico:'➤', name:'Liste rythmée', lines:'8-14 lignes', desc:'Accumulation scandée. Chaque ligne pousse à la suivante.' }
+];
+
+/* Format recommandé selon l'angle — logique sujet → format */
+const FORMAT_RECO = {
+  perte:     { fmt:'moyen',  why:'Le sujet de perte demande une situation installée avant de frapper.' },
+  erreur:    { fmt:'court',  why:'L\'erreur visible se démontre en quelques lignes. Pas besoin de plus.' },
+  contraste: { fmt:'court',  why:'Deux réalités opposées — court et direct, le contraste fait tout.' },
+  revelation:{ fmt:'long',   why:'Une révélation profonde demande du temps pour être construite.' },
+  histoire:  { fmt:'thread', why:'Une histoire complète se développe mieux en thread.' },
+  chiffre:   { fmt:'court',  why:'Un chiffre fort parle seul. Court et sans explication inutile.' },
+  croyance:  { fmt:'long',   why:'Déconstruire une croyance profonde demande de l\'architecture.' },
+  default:   { fmt:'moyen',  why:'Format polyvalent — installation + twist + révélation.' }
+};
+
+/* Angles par profil — spécifiques au produit, générés dynamiquement */
+function genAngles(produit, probleme, profil) {
+  const p = produit.toLowerCase();
+  const pr = probleme.toLowerCase();
+  const angles = [];
+
+  // Angle 1 — Le coût de l'inaction (universel mais adapté)
+  angles.push({
+    letter:'A', type:'perte',
+    title:'Le coût invisible de l\'inaction',
+    sub_title:'Ce que chaque semaine sans solution coûte vraiment',
+    subs:[
+      'Ce que tu perds chaque semaine à continuer comme avant',
+      'Le calcul que personne ne fait — et qui fait mal quand on le fait',
+      'La différence entre ceux qui avancent et toi — c\'est pas le talent'
+    ]
+  });
+
+  // Angle 2 — L'erreur courante (spécifique au problème)
+  angles.push({
+    letter:'B', type:'erreur',
+    title:'L\'erreur que tout le monde fait',
+    sub_title:'Pourquoi la méthode habituelle ne marche pas',
+    subs:[
+      'Ce qu\'ils font tous — et qui ne donne rien',
+      'La croyance qui sabote leurs résultats sans qu\'ils le sachent',
+      'Ce que les gens qui réussissent font différemment — et c\'est surprenant'
+    ]
+  });
+
+  // Angle 3 — La reconnaissance (miroir)
+  angles.push({
+    letter:'C', type:'contraste',
+    title:'Tu te reconnais là-dedans',
+    sub_title:'La situation exacte que ton client vit en ce moment',
+    subs:[
+      'Ce moment précis que tu vis chaque semaine',
+      'Ce que tu te dis dans ta tête quand ça ne marche pas',
+      'La frustration que tu n\'oses pas dire à voix haute'
+    ]
+  });
+
+  // Angle 4 — La révélation (éducation)
+  angles.push({
+    letter:'D', type:'revelation',
+    title:'Ce que personne ne t\'a dit',
+    sub_title:'La vérité sur pourquoi ça bloque vraiment',
+    subs:[
+      'Le vrai problème — celui que personne ne nomme',
+      'Ce que les autres ont compris que tu n\'as pas encore vu',
+      'Pourquoi travailler plus ne change rien dans cette situation'
+    ]
+  });
+
+  return angles;
+}
+
+/* Détection du profil */
+function detectProfil(texte) {
+  const t = texte.toLowerCase();
+  let scores = {};
+  for (let k in PROFILS) scores[k] = 0;
+  for (let k in PROFILS) {
+    for (let mot of PROFILS[k].mots) {
+      if (t.includes(mot)) scores[k] += 1;
+    }
+  }
+  if (t.includes('perdu') || t.includes('sais pas par où') || t.includes('commencer')) scores.auto += 2;
+  if (t.includes('chiffre') || t.includes('résultat') || t.includes('gain')) scores.optiV += 2;
+  if (t.includes('prix') || t.includes('comparer')) scores.optiP += 2;
+  if (t.includes('peur') || t.includes('garantie')) scores.protec += 2;
+  if (t.includes('unique') || t.includes('sur-mesure')) scores.lib += 2;
+  if (t.includes('reconnu') || t.includes('image')) scores.elev += 2;
+
+  return Object.keys(scores).reduce((a,b) => scores[a] > scores[b] ? a : b, 'auto');
+}
+
+/* Détection de l'angle depuis le texte (Mode B) */
+function detectAngle(texte) {
+  const t = texte.toLowerCase();
+  if (t.includes('perd') || t.includes('coût') || t.includes('combien')) return 'perte';
+  if (t.includes('erreur') || t.includes('problème') || t.includes('ne marche pas')) return 'erreur';
+  if (t.includes('différence') || t.includes('vs') || t.includes('pendant que')) return 'contraste';
+  if (t.includes('découvert') || t.includes('réalisé') || t.includes('vérité')) return 'revelation';
+  if (t.includes('histoire') || t.includes('quand j') || t.includes('j\'ai vécu')) return 'histoire';
+  if (t.includes('%') || t.match(/\d+h/) || t.match(/\d+\s*(fois|mois|semaine)/)) return 'chiffre';
+  if (t.includes('arrête de croire') || t.includes('on croit que') || t.includes('faux')) return 'croyance';
+  return 'default';
+}
+
+/* Hooks recommandés selon le profil */
+function getHooksForProfil(profilKey) {
+  return HOOKS.filter(h => h.profils.includes(profilKey));
+}
+
+/* Format recommandé selon le type d'angle */
+function getFormatReco(angleType) {
+  return FORMAT_RECO[angleType] || FORMAT_RECO.default;
+}
+
+/* ══════════════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════════════ */
+const A = { produit:'', probleme:'', ton:'', profil:null, angle:null, subAngle:null, hook:null, format:null };
+const B = { inspi:'', produit:'', ton:'', profil:null, angle:null, hook:null, format:null };
+
+/* ══════════════════════════════════════════════════════
+   UTILS
+══════════════════════════════════════════════════════ */
+function tog(id){ const s=document.getElementById(id); if(s.classList.contains('locked'))return; s.classList.toggle('collapsed'); }
+function unlock(id){ const el=document.getElementById(id); el.classList.remove('locked'); }
+function collapse(id){ document.getElementById(id).classList.add('collapsed'); }
+function markDone(id,sum){ const s=document.getElementById(id); s.classList.add('done'); document.getElementById(id+'s').textContent=sum; }
+function scrollTo(id){ setTimeout(()=>document.getElementById(id).scrollIntoView({behavior:'smooth',block:'start'}),80); }
+
+function copyPrompt(textId, btnId) {
+  const text = document.getElementById(textId).value;
+  const btn = document.getElementById(btnId);
+  const ok = () => { btn.textContent='✓ Copié'; btn.classList.add('ok'); setTimeout(()=>{ btn.textContent='Copier'; btn.classList.remove('ok'); }, 2500); };
+  if (navigator.clipboard && navigator.clipboard.writeText) { navigator.clipboard.writeText(text).then(ok).catch(()=>fbCopy(text,ok)); }
+  else fbCopy(text, ok);
+}
+function fbCopy(text,cb){ const ta=document.createElement('textarea'); ta.value=text; ta.style.cssText='position:fixed;top:0;left:0;width:1px;height:1px;opacity:0;'; document.body.appendChild(ta); ta.focus(); ta.select(); try{document.execCommand('copy');cb();}catch(e){} document.body.removeChild(ta); }
+
+/* ══════════════════════════════════════════════════════
+   MODE SWITCHER
+══════════════════════════════════════════════════════ */
+function switchMode(m) {
+  document.getElementById('panel-a').classList.toggle('on', m==='a');
+  document.getElementById('panel-b').classList.toggle('on', m==='b');
+  document.getElementById('msw-a').classList.toggle('on', m==='a');
+  document.getElementById('msw-b').classList.toggle('on', m==='b');
+}
+
+/* ══════════════════════════════════════════════════════
+   MODE A — FLUX
+══════════════════════════════════════════════════════ */
+function selTon(v,el) { A.ton=v; document.querySelectorAll('#ton-tags .tag').forEach(t=>t.classList.remove('on')); el.classList.add('on'); chkA1(); }
+
+function analyzeA() {
+  A.produit = document.getElementById('a-produit').value.trim();
+  A.probleme = document.getElementById('a-probleme').value.trim();
+  const texte = A.produit + ' ' + A.probleme;
+  if (texte.length > 10) {
+    A.profil = detectProfil(texte);
+    const p = PROFILS[A.profil];
+    const card = document.getElementById('profil-card');
+    card.classList.add('on');
+    document.getElementById('pc-name').textContent = p.emoji + ' ' + p.nom;
+    document.getElementById('pc-desc').textContent = p.desc;
+    document.getElementById('pc-tags').innerHTML = p.activer.map(t=>`<span class="pc-tag">${t}</span>`).join('');
+  }
+  chkA1();
+}
+
+function chkA1() {
+  document.getElementById('a1-btn').disabled = !(A.produit && A.probleme && A.ton);
+}
+
+function valA1() {
+  markDone('a1', PROFILS[A.profil].emoji + ' ' + PROFILS[A.profil].nom + ' · ' + A.ton);
+  collapse('a1');
+  unlock('a2');
+  document.getElementById('a2').classList.remove('collapsed');
+
+  // Générer les angles
+  const angles = genAngles(A.produit, A.probleme, A.profil);
+  const grid = document.getElementById('angles-grid');
+  grid.innerHTML = angles.map(ang => `
+    <div class="angle-card" onclick="selAngle('${ang.letter}',this)" data-type="${ang.type}">
+      <div class="ac-letter">Angle ${ang.letter}</div>
+      <div class="ac-title">${ang.title}</div>
+      <div class="ac-sub">${ang.sub_title}</div>
+    </div>
+  `).join('');
+
+  // Stocker les angles
+  A._angles = angles;
+  scrollTo('a2');
+}
+
+function selAngle(letter, el) {
+  document.querySelectorAll('.angle-card').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+  const ang = A._angles.find(a=>a.letter===letter);
+  A.angle = ang;
+
+  // Montrer les sous-angles
+  const subDiv = document.getElementById('sub-angles');
+  subDiv.classList.add('on');
+  document.getElementById('sub-angles-list').innerHTML = ang.subs.map(s=>`
+    <button class="sub-angle-btn" onclick="selSubAngle('${s}',this)">${s}</button>
+  `).join('');
+  A.subAngle = null;
+  document.getElementById('a2-btn').disabled = true;
+}
+
+function selSubAngle(s, el) {
+  document.querySelectorAll('.sub-angle-btn').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');
+  A.subAngle = s;
+  document.getElementById('a2-btn').disabled = false;
+}
+
+function valA2() {
+  markDone('a2', 'Angle ' + A.angle.letter + ' · ' + A.subAngle);
+  collapse('a2');
+  unlock('a3');
+  document.getElementById('a3').classList.remove('collapsed');
+
+  // Hooks filtrés selon profil
+  const hooks = getHooksForProfil(A.profil);
+  document.getElementById('hooks-list').innerHTML = hooks.map(h=>`
+    <div class="hook-item" onclick="selHookA('${h.code}',this)">
+      <div class="hi-code">${h.code} — ${h.name}</div>
+      <div class="hi-formula">"${h.formula}"</div>
+      <div class="hi-why">${h.why}</div>
+    </div>
+  `).join('');
+  scrollTo('a3');
+}
+
+function selHookA(code, el) {
+  document.querySelectorAll('#hooks-list .hook-item').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+  A.hook = HOOKS.find(h=>h.code===code);
+  document.getElementById('a3-btn').disabled = false;
+}
+
+function valA3() {
+  markDone('a3', A.hook.code + ' — ' + A.hook.name);
+  collapse('a3');
+  unlock('a4');
+  document.getElementById('a4').classList.remove('collapsed');
+
+  // Formats avec recommandation
+  const reco = getFormatReco(A.angle.type);
+  const grid = document.getElementById('formats-grid-a');
+  grid.innerHTML = FORMATS.map(f=>{
+    const isReco = f.id === reco.fmt;
+    return `<div class="fmt-btn${isReco?' recommended':''}" onclick="selFormatA('${f.id}',this)">
+      <div class="fb-ico">${f.ico}</div>
+      <div class="fb-name">${f.name}</div>
+      <div class="fb-lines">${f.lines}</div>
+    </div>`;
+  }).join('');
+
+  const note = document.getElementById('fmt-note-a');
+  note.classList.add('on');
+  note.innerHTML = `★ <strong>Recommandé : ${FORMATS.find(f=>f.id===reco.fmt).name}</strong> — ${reco.why}`;
+  scrollTo('a4');
+}
+
+function selFormatA(id, el) {
+  document.querySelectorAll('#formats-grid-a .fmt-btn').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+  A.format = FORMATS.find(f=>f.id===id);
+  document.getElementById('a4-btn').disabled = false;
+}
+
+function buildPromptA() {
+  const p = PROFILS[A.profil];
+  const fmt = A.format;
+  const hook = A.hook;
+
+  const fmtInstructions = {
+    direct:`FORMAT DIRECT — 1 à 2 lignes uniquement.
+Hook seul. Rien d'autre. Le vide fait l'effet.
+Pas d'explication — c'est voulu.`,
+    court:`FORMAT COURT — 4 à 6 lignes.
+Hook (1 ligne) — brutal, net.
+Constat précis (2 lignes) — ce qui rend ça réel.
+Bascule (1 ligne) — le twist inattendu.
+Question miroir (1 ligne) — le lecteur se voit.`,
+    moyen:`FORMAT MOYEN — 8 à 14 lignes.
+Hook (1 ligne)
+Situation (3 lignes) — concrète, sensorielle, présent. Le lecteur se voit dedans.
+Constat (3 lignes) — ce qui se passe vraiment sous la surface.
+Bascule (2 lignes) — ce que personne ne dit à voix haute.
+Question miroir ou tension finale (1 ligne).`,
+    long:`FORMAT LONG — 15 à 26 lignes.
+Hook (1-2 lignes)
+Amorçage (4 lignes) — la tension monte progressivement.
+Constat (5 lignes) — réalité embarrassante, précise, avec détails concrets.
+Bascule (4 lignes) — ce que personne ne dit — le vrai mécanisme.
+Révélation (3 lignes) — la vérité simple qui découle de tout ça.
+Tension finale ou question miroir (1-2 lignes).`,
+    thread:`FORMAT THREAD — Post + 3 commentaires.
+Post principal : 1-2 lignes. Hook pur. Dernière ligne : "Suite en commentaire 👇"
+Commentaire 1/ (7-9 lignes) — Situation installée en détail. Le lecteur se reconnaît.
+Commentaire 2/ (7-9 lignes) — Le vrai problème mis à nu. Constat + bascule.
+Commentaire 3/ (7-9 lignes) — La révélation. Question miroir finale.`,
+    rythme:`FORMAT LISTE RYTHMÉE — 8 à 14 lignes.
+Chaque ligne = une seule idée. Max 8 mots par ligne.
+Ligne 1 — Hook. Il doit arrêter le scroll.
+Ligne 2-3 — Faits courts qui confirment. Tension qui monte.
+Ligne 4 — Twist inattendu. Rupture de pattern.
+Ligne 5 — Révélation forte.
+Ligne 6 — Conclusion mémorable. Une phrase. Elle reste.`
+  };
+
+  const tonInstructions = {
+    'Direct et sans filtre':'Phrases courtes et tranchées. Aucune précaution. Le lecteur peut être inconfortable — c\'est voulu. Pas de "peut-être", pas de "souvent".',
+    'Chaleureux et bienveillant':'Direct mais jamais agressif. Tu nommes la douleur avec empathie. Le lecteur se sent compris avant d\'être challengé.',
+    'Analytique et précis':'Chiffres, mécanismes, causes et effets. Tu expliques POURQUOI. Chaque mot est justifié.',
+    'Storyteller':'Tu mets le lecteur dans une scène. Détails sensoriels concrets. L\'histoire est le véhicule — la vérité est la destination.',
+    'Provocateur et cash':'Tu dis ce que tout le monde pense mais personne n\'ose dire. Les posts finissent toujours par une question ou une tension — jamais en victoire.'
+  };
+
+  const prompt = `Tu génères un post Facebook percutant qui provoque des réactions réelles.
+
+━━━ LE BUSINESS ━━━
+Produit : ${A.produit}
+Problème résolu : ${A.probleme}
+
+━━━ LA LENTILLE PROFIL : ${p.nom.toUpperCase()} ${p.emoji} ━━━
+${p.desc}
+Son besoin profond : "${p.besoin}"
+Mots qui l'activent : ${p.activer.join(' · ')}
+IMPORTANT : Ce profil est une LENTILLE — pas un sujet.
+Tu regardes ton sujet avec ses yeux. Tu ne parles pas "de" ce profil.
+
+━━━ L'ANGLE ━━━
+Angle choisi : ${A.angle.title}
+Sous-angle précis : ${A.subAngle}
+
+━━━ LE HOOK — STRUCTURE ${hook.code} ━━━
+Mécanique : ${hook.name}
+Formule : "${hook.formula}"
+Pourquoi ça marche : ${hook.why}
+
+RÈGLE DU HOOK — NON NÉGOCIABLE :
+Génère 3 candidats de première ligne. Sélectionne le plus fort.
+INTERDIT : généralité ("Beaucoup d'entrepreneurs..."), question molle, affirmation tiède, heure précise type "14h00".
+Ancrage temporel → utilise un moment vécu ("Chaque lundi matin", "Depuis 3 mois", "La troisième fois cette semaine").
+
+━━━ ${fmtInstructions[fmt.id]} ━━━
+
+━━━ TON ET STYLE ━━━
+${tonInstructions[A.ton] || 'Direct et humain.'}
+
+━━━ RÈGLES ABSOLUES ━━━
+• "tu" toujours — jamais "vous"
+• Pas de hashtags dans le corps
+• Une idée par ligne — ligne blanche entre les blocs
+• Ne jamais inventer — utilise uniquement les données ci-dessus
+• Sonne humain — si une phrase ressemble à de l'IA, réécris-la
+• Réaction visée : commentaire, partage ou DM — choisis UNE seule
+
+Après avoir généré le post, demande :
+"Un détail personnel à ajouter pour que ce post te ressemble davantage ?"`;
+
+  document.getElementById('pa-text').value = prompt;
+  markDone('a4', fmt.name + ' · Prompt prêt');
+  collapse('a4');
+  unlock('a5');
+  document.getElementById('a5').classList.remove('collapsed');
+  document.getElementById('a5s').textContent = 'Prêt à copier';
+  scrollTo('a5');
+}
+
+/* ══════════════════════════════════════════════════════
+   MODE B — FLUX
+══════════════════════════════════════════════════════ */
+function selTonB(v,el) { B.ton=v; document.querySelectorAll('#ton-tags-b .tag').forEach(t=>t.classList.remove('on')); el.classList.add('on'); chkB1(); }
+
+function analyzeB() {
+  B.inspi = document.getElementById('b-inspi').value.trim();
+  B.produit = document.getElementById('b-produit').value.trim();
+  const texte = B.inspi + ' ' + B.produit;
+
+  if (texte.length < 20) { chkB1(); return; }
+
+  B.profil = detectProfil(texte);
+  B.angle = detectAngle(texte);
+
+  const reco = getFormatReco(B.angle);
+  const hooksReco = getHooksForProfil(B.profil);
+  B.hook = hooksReco[0]; // hook par défaut
+  B.format = FORMATS.find(f=>f.id===reco.fmt);
+
+  const detect = document.getElementById('inspi-detect');
+  detect.classList.add('on');
+  document.getElementById('id-profil').textContent = PROFILS[B.profil].emoji + ' ' + PROFILS[B.profil].nom + ' — ' + PROFILS[B.profil].desc;
+  document.getElementById('id-angle').textContent = B.angle.charAt(0).toUpperCase() + B.angle.slice(1);
+  document.getElementById('id-format').textContent = B.format.name + ' (' + B.format.lines + ')';
+  document.getElementById('id-hook').textContent = B.hook.code + ' — ' + B.hook.name;
+
+  // Mots clés repérés
+  const mots = [];
+  for (let m of PROFILS[B.profil].mots) { if (texte.toLowerCase().includes(m)) mots.push(m); }
+  document.getElementById('id-mots').innerHTML = mots.slice(0,6).map(m=>`<span class="id-badge">${m}</span>`).join('');
+
+  chkB1();
+}
+
+function chkB1() {
+  document.getElementById('b1-btn').disabled = !(B.inspi && B.ton);
+}
+
+function valB1() {
+  markDone('b1', PROFILS[B.profil].emoji + ' ' + PROFILS[B.profil].nom + ' détecté');
+  collapse('b1');
+  unlock('b2');
+  document.getElementById('b2').classList.remove('collapsed');
+
+  // Hooks
+  const hooks = getHooksForProfil(B.profil);
+  document.getElementById('b-hooks-list').innerHTML = hooks.map(h=>`
+    <div class="hook-item${B.hook&&B.hook.code===h.code?' on':''}" onclick="selHookB('${h.code}',this)">
+      <div class="hi-code">${h.code} — ${h.name}</div>
+      <div class="hi-formula">"${h.formula}"</div>
+      <div class="hi-why">${h.why}</div>
+    </div>
+  `).join('');
+
+  // Formats
+  const reco = getFormatReco(B.angle);
+  document.getElementById('formats-grid-b').innerHTML = FORMATS.map(f=>{
+    const isReco = f.id === reco.fmt;
+    const isOn = B.format && B.format.id === f.id;
+    return `<div class="fmt-btn${isReco?' recommended':''}${isOn?' on':''}" onclick="selFormatB('${f.id}',this)">
+      <div class="fb-ico">${f.ico}</div>
+      <div class="fb-name">${f.name}</div>
+      <div class="fb-lines">${f.lines}</div>
+    </div>`;
+  }).join('');
+
+  const note = document.getElementById('fmt-note-b');
+  note.classList.add('on');
+  note.innerHTML = `★ <strong>Recommandé : ${B.format.name}</strong> — ${reco.why}`;
+  scrollTo('b2');
+}
+
+function selHookB(code, el) {
+  document.querySelectorAll('#b-hooks-list .hook-item').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+  B.hook = HOOKS.find(h=>h.code===code);
+}
+
+function selFormatB(id, el) {
+  document.querySelectorAll('#formats-grid-b .fmt-btn').forEach(c=>c.classList.remove('on'));
+  el.classList.add('on');
+  B.format = FORMATS.find(f=>f.id===id);
+}
+
+function buildPromptB() {
+  const p = PROFILS[B.profil];
+  const hook = B.hook || getHooksForProfil(B.profil)[0];
+  const fmt = B.format;
+
+  const fmtInstructions = {
+    direct:`FORMAT DIRECT — 1 à 2 lignes. Hook seul. Le vide fait l'effet.`,
+    court:`FORMAT COURT — 4 à 6 lignes.
+Hook · Constat précis (2 lignes) · Bascule · Question miroir.`,
+    moyen:`FORMAT MOYEN — 8 à 14 lignes.
+Hook · Situation (3 lignes) · Constat (3 lignes) · Bascule (2 lignes) · Question miroir.`,
+    long:`FORMAT LONG — 15 à 26 lignes.
+Hook · Amorçage (4 lignes) · Constat (5 lignes) · Bascule (4 lignes) · Révélation (3 lignes) · Tension finale.`,
+    thread:`FORMAT THREAD — Post 1-2 lignes + "Suite en commentaire 👇"
+Commentaire 1/ (7-9 lignes) · Commentaire 2/ (7-9 lignes) · Commentaire 3/ (7-9 lignes).`,
+    rythme:`FORMAT LISTE RYTHMÉE — 8 à 14 lignes. Une idée par ligne, max 8 mots. Hook · Accumulation · Twist · Révélation · Conclusion.`
+  };
+
+  const prompt = `Tu génères un post Facebook percutant à partir de l'idée ci-dessous.
+
+━━━ L'IDÉE DE DÉPART ━━━
+${B.inspi}
+${B.produit ? `\nProduit / business : ${B.produit}` : ''}
+
+━━━ PROFIL DÉTECTÉ : ${p.nom.toUpperCase()} ${p.emoji} ━━━
+${p.desc}
+Son besoin profond : "${p.besoin}"
+Utilise cette lentille pour regarder l'idée — pas comme sujet mais comme filtre.
+
+━━━ LE HOOK — STRUCTURE ${hook.code} ━━━
+Mécanique : ${hook.name}
+Formule : "${hook.formula}"
+Adapte cette formule à l'idée ci-dessus avec des détails RÉELS.
+
+RÈGLE : Génère 3 candidats de première ligne. Garde le plus fort.
+Ancrage temporel → jamais une heure précise. Utilise un moment vécu ou une durée accumulée.
+
+━━━ ${fmtInstructions[fmt.id]} ━━━
+
+━━━ TON ━━━
+${B.ton || 'Direct et humain.'}
+"tu" toujours — jamais "vous" · Pas de hashtags · Une idée par ligne · Sonne humain.
+
+Après avoir généré le post :
+"Un détail personnel à ajouter pour que ce post te ressemble davantage ?"`;
+
+  document.getElementById('pb-text').value = prompt;
+  markDone('b2', hook.code + ' · ' + fmt.name);
+  collapse('b2');
+  unlock('b3');
+  document.getElementById('b3').classList.remove('collapsed');
+  document.getElementById('b3s').textContent = 'Prêt à copier';
+  scrollTo('b3');
+}
+</script>
+</body>
+</html>
